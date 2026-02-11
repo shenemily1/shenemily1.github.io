@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Blog - By Emily Shen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Courier', monospace;
+            background: #0a0a1a;
+            color: #00d9ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Starfield background */
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        header {
+            background: rgba(10, 10, 26, 0.95);
+            border-bottom: 2px solid #00d9ff;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #00d9ff;
+            text-shadow: 0 0 10px #00d9ff, 0 0 20px rgba(0, 217, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        nav {
+            background: rgba(10, 10, 26, 0.95);
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #00d9ff;
+            position: relative;
+            z-index: 10;
+        }
+
+        nav a {
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #00d9ff;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        nav a:hover {
+            background: rgba(0, 217, 255, 0.2);
+            box-shadow: 0 0 15px #00d9ff;
+            text-shadow: 0 0 10px #00d9ff;
+        }
+
+        main {
+            flex: 1;
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 5;
+        }
+
+        .hero {
+            background: rgba(10, 10, 26, 0.85);
+            padding: 2rem;
+            border: 1px solid #00d9ff;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2), inset 0 0 10px rgba(0, 217, 255, 0.1);
+        }
+
+        .hero h2 {
+            color: #00d9ff;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #00d9ff;
+        }
+
+        .hero p {
+            color: #00ffff;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .project-card {
+            background: rgba(10, 10, 26, 0.85);
+            padding: 2rem;
+            border: 2px solid #00d9ff;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.1);
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+            border-color: #00ffff;
+            background: rgba(10, 10, 26, 0.95);
+        }
+
+        .project-card h3 {
+            color: #00ffff;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px #00d9ff;
+        }
+
+        .project-card .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-card p {
+            color: #00d9ff;
+            line-height: 1.6;
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+
+        .project-card a {
+            display: inline-block;
+            background: transparent;
+            color: #00ffff;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #00d9ff;
+            border-radius: 3px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .project-card a:hover {
+            background: rgba(0, 217, 255, 0.2);
+            box-shadow: 0 0 15px #00d9ff;
+            transform: scale(1.05);
+        }
+
+        .project-card.coming-soon a {
+            color: #666;
+            border-color: #666;
+            cursor: not-allowed;
+            pointer-events: none;
+            text-shadow: none;
+        }
+
+        footer {
+            background: rgba(10, 10, 26, 0.95);
+            color: #00d9ff;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+            border-top: 1px solid #00d9ff;
+            position: relative;
+            z-index: 10;
+        }
+
+        footer p {
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px rgba(0, 217, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            main {
+                padding: 2rem 1rem;
+            }
+
+            .hero h2 {
+                font-size: 1.5rem;
+            }
+
+            .projects {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="starfield" id="starfield"></div>
+
+    <header>
+        <h1>🚀 CYBER BLOG</h1>
+        <p>[ Exploring AI • Game Development • Modern Web Technologies ]</p>
+    </header>
+
+    <nav>
+        <a href="index.html">HOME</a>
+        <a href="pacman.html">🎮 PAC-MAN ARENA</a>
+        <a href="arxiv-feed.html">📄 RESEARCH NEXUS</a>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h2>> WELCOME TO THE DIGITAL FRONTIER</h2>
+            <p>
+                ▌ This coding blog showcases projects built with artificial intelligence assistance. 
+                From valentine's day themed Pac-man to arXiv paper feeds, this blog showcases the wide spectrum of coding. ▌
+            </p>
+        </section>
+
+        <section class="projects">
+            <div class="project-card">
+                <div class="emoji">🎮</div>
+                <h3>> VALENTINE'S PAC-MAN ARENA</h3>
+                <p>
+                    ▌ It's valentine's day, even in the Pac-Man world! Navigate neon mazes, consume pellets, 
+                    and activate rose power-ups to fire hearts at enemy ghosts. Kill em' with love and kindness! ▌
+                </p>
+                <a href="pacman.html">[ ENTER GAME ]</a>
+            </div>
+
+            <div class="project-card">
+                <div class="emoji">📄</div>
+                <h3>> RESEARCH NEXUS - ARXIV FEED</h3>
+                <p>
+                    ▌ Stay connected to the latest research frontier from arXiv. This neural network 
+                    automatically synchronizes daily with papers matching cutting-edge research topics. 
+                    Explore the latest breakthroughs in AI and computer science, and experience knowledge without boundaries! ▌
+                </p>
+                <a href="arxiv-feed.html">[ ACCESS FEED ]</a>
+            </div>
+
+            <div class="project-card coming-soon">
+                <div class="emoji">✨</div>
+                <h3>> FUTURE PROTOCOLS</h3>
+                <p>
+                    ▌ Additional cybernetic projects incoming. This sector is expandable for future 
+                    assignments and creative coding endeavors. The next evolution is being processed. 
+                    Stand by for system updates. ▌
+                </p>
+                <a href="#">[ COMING SOON ]</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>▌ &copy; 2026 CYBER BLOG NEXUS | Built by Emily Shen with AI assistance for BST 236 ▌</p>
+    </footer>
+
+    <script>
+        // Generate starfield background
+        const starfield = document.getElementById('starfield');
+        const starCount = 100;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starfield.appendChild(star);
+        }
+    </script>
+</body>
+</html>
