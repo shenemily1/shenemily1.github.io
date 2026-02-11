@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Pac-Man - Cyber Blog</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a1a;
+            color: #00d9ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1rem;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.25rem;
+            color: #00d9ff;
+            text-shadow: 0 0 10px #00d9ff, 0 0 20px rgba(0, 217, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #00ffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .game-wrapper {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex: 1;
+            width: 100%;
+        }
+
+        canvas {
+            background: #0a0a1a;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+            display: block;
+            width: 560px;
+            height: 700px;
+        }
+
+        .info-panel {
+            background: rgba(10, 10, 26, 0.85);
+            border: 2px solid #00d9ff;
+            padding: 1.5rem;
+            border-radius: 5px;
+            min-width: 200px;
+            min-height: 700px;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.1);
+        }
+
+        .info-panel h3 {
+            color: #00ffff;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 5px #00d9ff;
+        }
+
+        .stat {
+            color: #00d9ff;
+            margin: 0.75rem 0;
+            font-size: 1.1rem;
+            text-align: left;
+        }
+
+        .stat-value {
+            color: #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .controls {
+            background: rgba(10, 10, 26, 0.85);
+            border: 2px solid #00d9ff;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .controls h3 {
+            color: #00ffff;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 5px #00d9ff;
+        }
+
+        .controls p {
+            color: #00d9ff;
+            margin: 0.5rem 0;
+            text-align: left;
+        }
+
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        .control-item {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.5rem;
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid #00d9ff;
+            border-radius: 3px;
+        }
+
+        .status-message {
+            color: #00ffff;
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            min-height: 2rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        button {
+            background: transparent;
+            color: #00ffff;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #00d9ff;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        button:hover {
+            background: rgba(0, 217, 255, 0.2);
+            box-shadow: 0 0 15px #00d9ff;
+            transform: scale(1.05);
+        }
+
+        .back-link {
+            color: #00ffff;
+            text-decoration: none;
+            margin-top: 0.5rem;
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border: 1px solid #00d9ff;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 217, 255, 0.2);
+            box-shadow: 0 0 15px #00d9ff;
+        }
+
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 26, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #start-screen.hidden {
+            display: none;
+        }
+
+        #start-button {
+            font-size: 1.5rem;
+            padding: 1.5rem 3rem;
+            background: rgba(0, 217, 255, 0.2);
+            color: #00ffff;
+            border: 2px solid #00d9ff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        #start-button:hover {
+            background: rgba(0, 217, 255, 0.4);
+            box-shadow: 0 0 20px #00d9ff;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 1200px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .game-wrapper {
+                gap: 1rem;
+                flex-direction: column;
+            }
+
+            canvas {
+                width: 100%;
+                max-width: 800px;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Start screen overlay -->
+    <div id="start-screen">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem;">🌹 VALENTINE'S PAC-MAN 💕</h1>
+        <p style="font-size: 1.5rem; color: #00ffff;">[ Neon Hearts Edition ]</p>
+        <button id="start-button">▶ START GAME</button>
+    </div>
+    
+    <div class="starfield" id="starfield"></div>
+
+    <div class="container">
+        <h1>🌹 VALENTINE'S PAC-MAN ARENA 💕</h1>
+        <p class="subtitle">[ Neon Hearts Edition ]</p>
+
+        <div class="game-wrapper">
+            <div>
+                <canvas id="gameCanvas" width="560" height="700"></canvas>
+            </div>
+            <div class="info-panel">
+                <h3>> GAME STATUS</h3>
+                <div class="stat">Score: <span class="stat-value" id="score">0</span></div>
+                <div class="stat">Lives: <span class="stat-value" id="lives">3</span></div>
+                <div class="stat">Level: <span class="stat-value" id="level">1</span></div>
+                <div class="stat">Pellets Left: <span class="stat-value" id="pelletsLeft">0</span></div>
+                <div class="stat">Power-Up: <span class="stat-value" id="powerUp">OFF</span></div>
+                <div class="stat">Heart Shots: <span class="stat-value" id="hearts">0</span></div>
+                <hr style="margin: 1rem 0; border-color: #00d9ff; opacity: 0.5;">
+                <button id="music-toggle" onclick="toggleMusic()">🔊 MUSIC ON</button>
+                <button onclick="location.href='index.html'">[ BACK TO HOME ]</button>
+                <button onclick="location.reload()">[ NEW GAME ]</button>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage">Use ARROW KEYS to move • Eat pellets • Collect roses for power-up!</div>
+
+        <div class="controls">
+            <h3>> GAME MECHANICS</h3>
+            <div class="control-row">
+                <div class="control-item">
+                    <strong>⬅️ ➡️ ⬆️ ⬇️</strong><br>Move Pac-Man
+                </div>
+                <div class="control-item">
+                    <strong>🟡 Yellow Circles</strong><br>Pellets (10 pts each)
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-item">
+                    <strong>🌹 Rose</strong><br>Power-up (shoots hearts!)
+                </div>
+                <div class="control-item">
+                    <strong>💕 Hearts</strong><br>Eliminate ghosts
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-item">
+                    <strong>👻 Ghosts</strong><br>Avoid or power-up to defeat!
+                </div>
+                <div class="control-item">
+                    <strong>3 Lives</strong><br>Game Over when lost
+                </div>
+            </div>
+        </div>
+
+        <a href="index.html" class="back-link">[ RETURN TO CYBER BLOG ]</a>
+    </div>
+
+    <script>
+        // 8-bit style background music using Web Audio API
+        let audioContext;
+        let musicGainNode;
+        let isPlaying = false;
+        let isPowerUpMusicPlaying = false; // Track if power-up music is currently playing
+        let oscillators = [];
+        let musicEnabled = true; // Track if music is enabled by user
+
+        function create8BitMusic() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                musicGainNode = audioContext.createGain();
+                musicGainNode.gain.value = 0.10; // Background music volume at 10%
+                musicGainNode.connect(audioContext.destination);
+            }
+        }
+
+        function playNote(frequency, startTime, duration, waveType = 'square') {
+            const osc = audioContext.createOscillator();
+            const noteGain = audioContext.createGain();
+            
+            osc.type = waveType;
+            osc.frequency.value = frequency;
+            
+            osc.connect(noteGain);
+            noteGain.connect(musicGainNode);
+            
+            // Envelope for each note
+            noteGain.gain.setValueAtTime(0, startTime);
+            noteGain.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+            noteGain.gain.linearRampToValueAtTime(0.2, startTime + duration * 0.5);
+            noteGain.gain.linearRampToValueAtTime(0, startTime + duration);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+            
+            oscillators.push(osc);
+            
+            return osc;
+        }
+
+        function play8BitMelody() {
+            if (!audioContext) return;
+            
+            // Don't start normal music if power-up is active
+            if (gameState.powerUpActive) return;
+            
+            const now = audioContext.currentTime;
+            const beatDuration = 0.5; // Base beat duration for 3/4 time
+            const swingRatio = 0.6; // Swing timing (first note longer, second shorter)
+            
+            // 3/4 time signature melody with swing feel
+            // Pattern: dotted eighth + sixteenth for swing
+            const melody = [
+                // Measure 1
+                {note: 523.25, duration: beatDuration * swingRatio}, // C5
+                {note: 587.33, duration: beatDuration * (1 - swingRatio)}, // D5
+                {note: 659.25, duration: beatDuration * swingRatio}, // E5
+                {note: 698.46, duration: beatDuration * (1 - swingRatio)}, // F5
+                {note: 659.25, duration: beatDuration}, // E5
+                
+                // Measure 2
+                {note: 587.33, duration: beatDuration * swingRatio}, // D5
+                {note: 523.25, duration: beatDuration * (1 - swingRatio)}, // C5
+                {note: 587.33, duration: beatDuration * 2}, // D5 (held)
+                
+                // Measure 3
+                {note: 392.00, duration: beatDuration * swingRatio}, // G4
+                {note: 440.00, duration: beatDuration * (1 - swingRatio)}, // A4
+                {note: 493.88, duration: beatDuration * swingRatio}, // B4
+                {note: 523.25, duration: beatDuration * (1 - swingRatio)}, // C5
+                {note: 587.33, duration: beatDuration}, // D5
+                
+                // Measure 4
+                {note: 659.25, duration: beatDuration * swingRatio}, // E5
+                {note: 698.46, duration: beatDuration * (1 - swingRatio)}, // F5
+                {note: 523.25, duration: beatDuration * 2}, // C5 (held)
+                
+                // Measure 5
+                {note: 659.25, duration: beatDuration * swingRatio}, // E5
+                {note: 698.46, duration: beatDuration * (1 - swingRatio)}, // F5
+                {note: 784.00, duration: beatDuration * swingRatio}, // G5
+                {note: 880.00, duration: beatDuration * (1 - swingRatio)}, // A5
+                {note: 784.00, duration: beatDuration}, // G5
+                
+                // Measure 6
+                {note: 698.46, duration: beatDuration * swingRatio}, // F5
+                {note: 659.25, duration: beatDuration * (1 - swingRatio)}, // E5
+                {note: 587.33, duration: beatDuration * 2}, // D5 (held)
+                
+                // Measure 7
+                {note: 523.25, duration: beatDuration * swingRatio}, // C5
+                {note: 587.33, duration: beatDuration * (1 - swingRatio)}, // D5
+                {note: 659.25, duration: beatDuration * swingRatio}, // E5
+                {note: 587.33, duration: beatDuration * (1 - swingRatio)}, // D5
+                {note: 523.25, duration: beatDuration}, // C5
+                
+                // Measure 8
+                {note: 392.00, duration: beatDuration * swingRatio}, // G4
+                {note: 440.00, duration: beatDuration * (1 - swingRatio)}, // A4
+                {note: 523.25, duration: beatDuration * 2}, // C5 (held)
+            ];
+            
+            let currentTime = now;
+            
+            // Play melody
+            melody.forEach(({note, duration}) => {
+                playNote(note, currentTime, duration, 'square');
+                currentTime += duration;
+            });
+            
+            // Bass line in 3/4 time (quarter notes on beats 1, 2, 3)
+            currentTime = now;
+            const bassPattern = [
+                // Each bass note is one quarter note (3 per measure)
+                {note: 261.63, duration: beatDuration}, // C4
+                {note: 261.63, duration: beatDuration}, // C4
+                {note: 261.63, duration: beatDuration}, // C4
+                
+                {note: 293.66, duration: beatDuration}, // D4
+                {note: 293.66, duration: beatDuration}, // D4
+                {note: 293.66, duration: beatDuration}, // D4
+                
+                {note: 196.00, duration: beatDuration}, // G3
+                {note: 196.00, duration: beatDuration}, // G3
+                {note: 196.00, duration: beatDuration}, // G3
+                
+                {note: 261.63, duration: beatDuration}, // C4
+                {note: 261.63, duration: beatDuration}, // C4
+                {note: 261.63, duration: beatDuration}, // C4
+                
+                {note: 329.63, duration: beatDuration}, // E4
+                {note: 329.63, duration: beatDuration}, // E4
+                {note: 329.63, duration: beatDuration}, // E4
+                
+                {note: 293.66, duration: beatDuration}, // D4
+                {note: 293.66, duration: beatDuration}, // D4
+                {note: 293.66, duration: beatDuration}, // D4
+                
+                {note: 261.63, duration: beatDuration}, // C4
+                {note: 261.63, duration: beatDuration}, // C4
+                {note: 261.63, duration: beatDuration}, // C4
+                
+                {note: 196.00, duration: beatDuration}, // G3
+                {note: 196.00, duration: beatDuration}, // G3
+                {note: 196.00, duration: beatDuration}, // G3
+            ];
+            
+            bassPattern.forEach(({note, duration}) => {
+                playNote(note, currentTime, duration, 'triangle');
+                currentTime += duration;
+            });
+            
+            // Schedule next loop
+            const totalDuration = melody.reduce((sum, {duration}) => sum + duration, 0);
+            setTimeout(() => {
+                if (isPlaying && !gameState.powerUpActive) {
+                    play8BitMelody();
+                }
+            }, totalDuration * 1000);
+        }
+
+        function playPowerUpMusic() {
+            if (!audioContext) return;
+            
+            const now = audioContext.currentTime;
+            const beatDuration = 0.15; // Much faster! (4/4 time, fast tempo)
+            
+            // Fast, energetic 4/4 melody for power-up mode
+            const melody = [
+                // Rapid ascending pattern
+                {note: 659.25, duration: beatDuration}, // E5
+                {note: 698.46, duration: beatDuration}, // F5
+                {note: 784.00, duration: beatDuration}, // G5
+                {note: 880.00, duration: beatDuration}, // A5
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 1046.50, duration: beatDuration}, // C6
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 880.00, duration: beatDuration}, // A5
+                
+                {note: 784.00, duration: beatDuration}, // G5
+                {note: 880.00, duration: beatDuration}, // A5
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 1046.50, duration: beatDuration}, // C6
+                {note: 1174.66, duration: beatDuration}, // D6
+                {note: 1046.50, duration: beatDuration}, // C6
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 880.00, duration: beatDuration}, // A5
+                
+                {note: 1046.50, duration: beatDuration}, // C6
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 880.00, duration: beatDuration}, // A5
+                {note: 784.00, duration: beatDuration}, // G5
+                {note: 880.00, duration: beatDuration}, // A5
+                {note: 784.00, duration: beatDuration}, // G5
+                {note: 698.46, duration: beatDuration}, // F5
+                {note: 659.25, duration: beatDuration}, // E5
+                
+                {note: 784.00, duration: beatDuration}, // G5
+                {note: 880.00, duration: beatDuration}, // A5
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 1046.50, duration: beatDuration}, // C6
+                {note: 987.77, duration: beatDuration}, // B5
+                {note: 880.00, duration: beatDuration}, // A5
+                {note: 784.00, duration: beatDuration}, // G5
+                {note: 880.00, duration: beatDuration}, // A5
+            ];
+            
+            let currentTime = now;
+            
+            // Play melody
+            melody.forEach(({note, duration}) => {
+                playNote(note, currentTime, duration, 'square');
+                currentTime += duration;
+            });
+            
+            // Fast driving bass line
+            currentTime = now;
+            const bassPattern = [
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                
+                {note: 392.00, duration: beatDuration * 2}, // G4
+                {note: 392.00, duration: beatDuration * 2}, // G4
+                {note: 392.00, duration: beatDuration * 2}, // G4
+                {note: 392.00, duration: beatDuration * 2}, // G4
+                
+                {note: 261.63, duration: beatDuration * 2}, // C4
+                {note: 261.63, duration: beatDuration * 2}, // C4
+                {note: 293.66, duration: beatDuration * 2}, // D4
+                {note: 293.66, duration: beatDuration * 2}, // D4
+                
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                {note: 329.63, duration: beatDuration * 2}, // E4
+                {note: 329.63, duration: beatDuration * 2}, // E4
+            ];
+            
+            bassPattern.forEach(({note, duration}) => {
+                playNote(note, currentTime, duration, 'sawtooth');
+                currentTime += duration;
+            });
+            
+            // Schedule next loop only if power-up is still active
+            const totalDuration = melody.reduce((sum, {duration}) => sum + duration, 0);
+            setTimeout(() => {
+                if (isPlaying && gameState.powerUpActive) {
+                    playPowerUpMusic();
+                }
+                // Don't automatically switch back - let updatePowerUp() handle it
+            }, totalDuration * 1000);
+        }
+
+        function playMusic() {
+            if (!isPlaying && musicEnabled) {
+                create8BitMusic();
+                isPlaying = true;
+                play8BitMelody();
+            }
+        }
+
+        function toggleMusic() {
+            musicEnabled = !musicEnabled;
+            const button = document.getElementById('music-toggle');
+            
+            if (musicEnabled) {
+                button.textContent = '🔊 MUSIC ON';
+                // Start music if game is running
+                if (!gameState.gameOver) {
+                    if (gameState.powerUpActive) {
+                        switchToPowerUpMusic();
+                    } else {
+                        playMusic();
+                    }
+                }
+            } else {
+                button.textContent = '🔇 MUSIC OFF';
+                stopMusic();
+            }
+        }
+
+        function stopMusic() {
+            isPlaying = false;
+            isPowerUpMusicPlaying = false;
+            oscillators.forEach(osc => {
+                try {
+                    osc.stop();
+                } catch (e) {
+                    // Already stopped
+                }
+            });
+            oscillators = [];
+        }
+
+        function switchToPowerUpMusic() {
+            // Don't start music if disabled
+            if (!musicEnabled) return;
+            
+            // If power-up music is already playing, don't start a new instance
+            // Just let the current one continue and the power-up timer will be extended
+            if (isPowerUpMusicPlaying) {
+                return;
+            }
+            
+            // Stop all current music
+            stopMusic();
+            // Start power-up music
+            isPlaying = true;
+            isPowerUpMusicPlaying = true;
+            playPowerUpMusic();
+        }
+
+        function switchToNormalMusic() {
+            // Don't start music if disabled
+            if (!musicEnabled) return;
+            
+            // Stop all current music
+            stopMusic();
+            // Start normal music
+            isPlaying = true;
+            play8BitMelody();
+        }
+
+        // Start button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('start-button');
+            const startScreen = document.getElementById('start-screen');
+            
+            startButton.addEventListener('click', function() {
+                startScreen.classList.add('hidden');
+                playMusic();
+            });
+        });
+
+        // Generate starfield
+        const starfield = document.getElementById('starfield');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starfield.appendChild(star);
+        }
+
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game constants
+        const GRID_SIZE = 20;
+        const ROWS = canvas.height / GRID_SIZE;
+        const COLS = canvas.width / GRID_SIZE;
+        const GHOST_COUNT = 4;
+
+        // Game state
+        let gameState = {
+            score: 0,
+            lives: 3,
+            level: 1,
+            gameOver: false,
+            won: false,
+            powerUpActive: false,
+            powerUpTime: 0,
+            powerUpDuration: 8000, // 8 seconds
+            frameCount: 0,
+            updateInterval: 8, // Update game logic every 8 frames (slower game speed)
+            heartFrameCount: 0,
+            heartUpdateInterval: 7, // Hearts move every 7 frames (slightly faster than pacman/ghosts at 8)
+            lastHeartShootTime: 0, // Track last time a heart was shot
+            lastRoseSpawnTime: 0, // Track last time rose spawn was attempted
+            animationFrame: 0 // Track frame for animations
+        };
+
+        // Sound effects
+        function playPoofSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Create a "poof" sound - descending white noise effect
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playPacmanDeathSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Create a descending tone for Pac-Man death
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Maze definition (1 = wall, 0 = path)
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+            [1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,0,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1],
+            [1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,1],
+            [1,1,1,1,0,1,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,1,0,1,1,1,1,1],
+            [0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0],
+            [1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,1,1,1,1],
+            [1,1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1,1,1],
+            [1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,1],
+            [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // Pellets
+        let pellets = [];
+        function initPellets() {
+            pellets = [];
+            for (let row = 0; row < maze.length; row++) {
+                for (let col = 0; col < maze[0].length; col++) {
+                    if (maze[row][col] === 0 && !(row === 1 && col === 1)) {
+                        pellets.push({ row, col, eaten: false });
+                    }
+                }
+            }
+        }
+
+        // Pac-Man
+        const pacman = {
+            row: 1,
+            col: 1,
+            direction: 'right',
+            nextDirection: 'right',
+            respawnTime: null, // Track when Pac-Man is respawning
+            dying: false, // Track if Pac-Man is dying
+            deathStartTime: null // When death animation started
+        };
+
+        // Ghosts
+        let ghosts = [];
+        function initGhosts() {
+            ghosts = [
+                { row: 10, col: 12, color: '#FF6B9D', moveCounter: 0, moveInterval: 2, respawnTime: null, dying: false, deathStartTime: null },  // Pink
+                { row: 10, col: 14, color: '#FFA502', moveCounter: 0, moveInterval: 2, respawnTime: null, dying: false, deathStartTime: null }, // Orange
+                { row: 11, col: 12, color: '#00FFFF', moveCounter: 0, moveInterval: 2, respawnTime: null, dying: false, deathStartTime: null },  // Cyan
+                { row: 11, col: 14, color: '#FF00FF', moveCounter: 0, moveInterval: 2, respawnTime: null, dying: false, deathStartTime: null }  // Magenta
+            ];
+        }
+
+        // Rose power-up
+        let rose = null;
+        let hearts = [];
+
+        function spawnRose() {
+            if (!rose) {
+                const now = Date.now();
+                // Spawn rose every 10 seconds
+                if (now - gameState.lastRoseSpawnTime >= 10000) {
+                    // Find uneaten pellets
+                    const uneatenPellets = pellets.filter(p => !p.eaten);
+                    if (uneatenPellets.length > 0) {
+                        // Pick a random pellet location for the rose
+                        const randomPellet = uneatenPellets[Math.floor(Math.random() * uneatenPellets.length)];
+                        rose = {
+                            row: randomPellet.row,
+                            col: randomPellet.col
+                        };
+                        gameState.lastRoseSpawnTime = now;
+                    }
+                }
+            }
+        }
+
+        function canMove(row, col) {
+            if (row < 0 || row >= maze.length || col < 0 || col >= maze[0].length) return false;
+            return maze[row][col] === 0;
+        }
+
+        function movePacman() {
+            // Don't move while respawning or dying
+            if (pacman.respawnTime !== null || pacman.dying) return;
+            
+            const nextRow = pacman.row + (pacman.nextDirection === 'down' ? 1 : pacman.nextDirection === 'up' ? -1 : 0);
+            const nextCol = pacman.col + (pacman.nextDirection === 'right' ? 1 : pacman.nextDirection === 'left' ? -1 : 0);
+
+            // Check for teleportation through side openings (row 10, columns 0 and 27)
+            if (nextRow === 10) {
+                if (nextCol < 0) {
+                    // Teleport from left to right
+                    pacman.col = 27;
+                    pacman.direction = pacman.nextDirection;
+                    updateUI();
+                    return;
+                } else if (nextCol >= maze[0].length) {
+                    // Teleport from right to left
+                    pacman.col = 0;
+                    pacman.direction = pacman.nextDirection;
+                    updateUI();
+                    return;
+                }
+            }
+
+            if (canMove(nextRow, nextCol)) {
+                pacman.row = nextRow;
+                pacman.col = nextCol;
+                pacman.direction = pacman.nextDirection;
+            } else {
+                const row = pacman.row + (pacman.direction === 'down' ? 1 : pacman.direction === 'up' ? -1 : 0);
+                const col = pacman.col + (pacman.direction === 'right' ? 1 : pacman.direction === 'left' ? -1 : 0);
+                
+                // Check for teleportation in current direction
+                if (row === 10) {
+                    if (col < 0) {
+                        pacman.col = 27;
+                        updateUI();
+                        return;
+                    } else if (col >= maze[0].length) {
+                        pacman.col = 0;
+                        updateUI();
+                        return;
+                    }
+                }
+                
+                if (canMove(row, col)) {
+                    pacman.row = row;
+                    pacman.col = col;
+                }
+            }
+
+            // Check pellet collision
+            for (let pellet of pellets) {
+                if (pellet.row === pacman.row && pellet.col === pacman.col && !pellet.eaten) {
+                    pellet.eaten = true;
+                    gameState.score += 10;
+                }
+            }
+
+            // Check if all pellets are eaten
+            const pelletsLeft = pellets.filter(p => !p.eaten).length;
+            if (pelletsLeft === 0 && !gameState.won) {
+                gameState.won = true;
+                gameState.gameOver = true;
+                document.getElementById('statusMessage').textContent = '🎉 LEVEL COMPLETE! All pellets collected! 🎉';
+            }
+
+            // Check rose collision
+            if (rose && rose.row === pacman.row && rose.col === pacman.col) {
+                gameState.powerUpActive = true;
+                gameState.powerUpTime = Date.now();
+                gameState.score += 50;
+                document.getElementById('statusMessage').textContent = '⚡ POWER-UP ACTIVATED! Shoot hearts to destroy ghosts! ⚡';
+                rose = null;
+                // Switch to power-up music
+                switchToPowerUpMusic();
+            }
+
+            updateUI();
+        }
+
+        function moveGhosts() {
+            for (let ghost of ghosts) {
+                // Skip respawning or dying ghosts
+                if (ghost.respawnTime !== null || ghost.dying) continue;
+                
+                ghost.moveCounter++;
+                if (ghost.moveCounter < ghost.moveInterval) continue;
+                ghost.moveCounter = 0;
+
+                let directions = [];
+                if (canMove(ghost.row + 1, ghost.col)) directions.push({ row: 1, col: 0 });
+                if (canMove(ghost.row - 1, ghost.col)) directions.push({ row: -1, col: 0 });
+                if (canMove(ghost.row, ghost.col + 1)) directions.push({ row: 0, col: 1 });
+                if (canMove(ghost.row, ghost.col - 1)) directions.push({ row: 0, col: -1 });
+                
+                // Add teleportation options if ghost is at row 10 and near the edges
+                if (ghost.row === 10) {
+                    if (ghost.col === 0) directions.push({ row: 0, col: -1, teleport: 'left' });
+                    if (ghost.col === 27) directions.push({ row: 0, col: 1, teleport: 'right' });
+                }
+
+                if (directions.length > 0) {
+                    let selectedDir;
+                    
+                    // 85% of the time use smart AI to chase, 15% pick randomly to avoid getting stuck
+                    if (Math.random() < 0.85) {
+                        // Smart AI: Chase Pac-Man
+                        directions.sort((a, b) => {
+                            let newRow = ghost.row + a.row;
+                            let newCol = ghost.col + a.col;
+                            
+                            // Handle teleportation in distance calculation
+                            if (a.teleport === 'left') newCol = 27;
+                            if (a.teleport === 'right') newCol = 0;
+                            
+                            const aDist = Math.abs(newRow - pacman.row) + Math.abs(newCol - pacman.col);
+                            
+                            newRow = ghost.row + b.row;
+                            newCol = ghost.col + b.col;
+                            
+                            if (b.teleport === 'left') newCol = 27;
+                            if (b.teleport === 'right') newCol = 0;
+                            
+                            const bDist = Math.abs(newRow - pacman.row) + Math.abs(newCol - pacman.col);
+                            return aDist - bDist;
+                        });
+                        selectedDir = directions[0];
+                    } else {
+                        // Pick random direction to break potential loops
+                        selectedDir = directions[Math.floor(Math.random() * directions.length)];
+                    }
+
+                    // Handle teleportation
+                    if (selectedDir.teleport === 'left') {
+                        ghost.col = 27;
+                        continue;
+                    } else if (selectedDir.teleport === 'right') {
+                        ghost.col = 0;
+                        continue;
+                    }
+
+                    const newRow = ghost.row + selectedDir.row;
+                    const newCol = ghost.col + selectedDir.col;
+                    
+                    // Check if another ghost is at this position
+                    let ghostAtPosition = false;
+                    for (let otherGhost of ghosts) {
+                        if (otherGhost !== ghost && otherGhost.respawnTime === null && otherGhost.row === newRow && otherGhost.col === newCol) {
+                            ghostAtPosition = true;
+                            break;
+                        }
+                    }
+                    
+                    // Only move if position is free
+                    if (!ghostAtPosition) {
+                        ghost.row = newRow;
+                        ghost.col = newCol;
+                    }
+                }
+            }
+        }
+
+        function shootHearts() {
+            if (gameState.powerUpActive) {
+                const now = Date.now();
+                // Shoot hearts at 300ms interval
+                if (now - gameState.lastHeartShootTime >= 300) {
+                    const dirRow = pacman.direction === 'down' ? 1 : pacman.direction === 'up' ? -1 : 0;
+                    const dirCol = pacman.direction === 'right' ? 1 : pacman.direction === 'left' ? -1 : 0;
+
+                    // Shoot hearts during power-up in current direction
+                    if (dirRow !== 0 || dirCol !== 0) {
+                        hearts.push({
+                            row: pacman.row,
+                            col: pacman.col,
+                            dirRow,
+                            dirCol
+                        });
+                        gameState.lastHeartShootTime = now;
+                    }
+                }
+            }
+        }
+
+        function moveHearts() {
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                hearts[i].row += hearts[i].dirRow;
+                hearts[i].col += hearts[i].dirCol;
+
+                if (!canMove(hearts[i].row, hearts[i].col)) {
+                    hearts.splice(i, 1);
+                    continue;
+                }
+
+                // Check collision with ghosts
+                for (let j = 0; j < ghosts.length; j++) {
+                    if (ghosts[j].respawnTime === null && !ghosts[j].dying && hearts[i].row === ghosts[j].row && hearts[i].col === ghosts[j].col) {
+                        gameState.score += 200;
+                        hearts.splice(i, 1);
+                        // Start death animation for ghost
+                        ghosts[j].dying = true;
+                        ghosts[j].deathStartTime = Date.now();
+                        // Mark ghost for respawn in 8 seconds (animation is 1 second)
+                        ghosts[j].respawnTime = Date.now() + 8000;
+                        // Play poof sound
+                        playPoofSound();
+                        break;
+                    }
+                }
+            }
+        }
+
+        function checkCollisions() {
+            for (let ghost of ghosts) {
+                // Skip respawning or dying ghosts
+                if (ghost.respawnTime !== null || ghost.dying) continue;
+                
+                if (ghost.row === pacman.row && ghost.col === pacman.col) {
+                    if (gameState.powerUpActive) {
+                        gameState.score += 500;
+                        // Start death animation for ghost
+                        ghost.dying = true;
+                        ghost.deathStartTime = Date.now();
+                        ghost.respawnTime = Date.now() + 8000;
+                        // Play poof sound
+                        playPoofSound();
+                    } else if (pacman.respawnTime === null && !pacman.dying) {
+                        // Only process collision if Pac-Man is not already respawning or dying
+                        gameState.lives--;
+                        if (gameState.lives <= 0) {
+                            gameState.gameOver = true;
+                            pacman.dying = true;
+                            pacman.deathStartTime = Date.now();
+                            document.getElementById('statusMessage').textContent = 'GAME OVER! You lost all your lives.';
+                            // Play Pac-Man death sound
+                            playPacmanDeathSound();
+                            // Stop background music
+                            stopMusic();
+                        } else {
+                            // Mark Pac-Man for death animation then respawn
+                            pacman.dying = true;
+                            pacman.deathStartTime = Date.now();
+                            pacman.respawnTime = Date.now() + 2000;
+                            document.getElementById('statusMessage').textContent = `💔 You died! ${gameState.lives} lives remaining...`;
+                            // Play Pac-Man death sound
+                            playPacmanDeathSound();
+                            // Move ghost away to avoid immediate re-collision
+                            let validSpot = false;
+                            let attempts = 0;
+                            while (!validSpot && attempts < 50) {
+                                ghost.row = Math.floor(Math.random() * maze.length);
+                                ghost.col = Math.floor(Math.random() * maze[0].length);
+                                if (maze[ghost.row] && maze[ghost.row][ghost.col] === 0) {
+                                    validSpot = true;
+                                }
+                                attempts++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function updatePowerUp() {
+            if (gameState.powerUpActive) {
+                const elapsed = Date.now() - gameState.powerUpTime;
+                if (elapsed > gameState.powerUpDuration) {
+                    gameState.powerUpActive = false;
+                    while (hearts.length > 0) {
+                        hearts.pop();
+                    }
+                    document.getElementById('statusMessage').textContent = 'Power-up expired! Collect another rose to power up again.';
+                    // Switch back to normal music
+                    switchToNormalMusic();
+                }
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('pelletsLeft').textContent = pellets.filter(p => !p.eaten).length;
+            document.getElementById('powerUp').textContent = gameState.powerUpActive ? 'ACTIVE ⚡' : 'OFF';
+            document.getElementById('hearts').textContent = hearts.length;
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw maze
+            ctx.strokeStyle = '#00d9ff';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < maze.length; i++) {
+                for (let j = 0; j < maze[i].length; j++) {
+                    if (maze[i][j] === 1) {
+                        ctx.fillStyle = '#00d9ff';
+                        ctx.fillRect(j * GRID_SIZE, i * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+                    }
+                }
+            }
+
+            // Draw pellets
+            ctx.fillStyle = '#FFD700';
+            for (let pellet of pellets) {
+                if (!pellet.eaten) {
+                    ctx.beginPath();
+                    ctx.arc(pellet.col * GRID_SIZE + GRID_SIZE / 2, pellet.row * GRID_SIZE + GRID_SIZE / 2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Draw rose
+            if (rose) {
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText('🌹', rose.col * GRID_SIZE + 2, rose.row * GRID_SIZE + 18);
+            }
+
+            // Draw Pac-Man (with death animation if dying)
+            if (pacman.dying) {
+                const elapsed = Date.now() - pacman.deathStartTime;
+                const progress = Math.min(elapsed / 1000, 1); // 1 second animation
+                drawPacmanDeath(pacman.col * GRID_SIZE + 2, pacman.row * GRID_SIZE + 2, progress);
+            } else if (pacman.respawnTime === null) {
+                // Draw Pac-Man as a circle with mouth
+                const centerX = pacman.col * GRID_SIZE + GRID_SIZE / 2;
+                const centerY = pacman.row * GRID_SIZE + GRID_SIZE / 2;
+                const radius = (GRID_SIZE - 4) / 2;
+                
+                // Determine mouth direction based on movement
+                let mouthAngle = 0;
+                if (pacman.direction === 'right') mouthAngle = 0;
+                else if (pacman.direction === 'down') mouthAngle = Math.PI / 2;
+                else if (pacman.direction === 'left') mouthAngle = Math.PI;
+                else if (pacman.direction === 'up') mouthAngle = -Math.PI / 2;
+                
+                // Animate mouth opening/closing
+                const mouthOpenAmount = Math.abs(Math.sin(gameState.animationFrame * 0.15)) * 0.25;
+                const mouthSize = Math.PI * 0.25 + (Math.PI * 0.15 * mouthOpenAmount);
+                
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, mouthAngle + mouthSize, mouthAngle + (Math.PI * 2 - mouthSize));
+                ctx.lineTo(centerX, centerY);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw heart bowtie only when power-up is active
+                if (gameState.powerUpActive) {
+                    const bowtieY = centerY - radius - 2; // Position above the circle
+                    const heartSize = 4;
+                    drawHeart(centerX, bowtieY, heartSize, '#FF69B4');
+                }
+            }
+
+            // Draw ghosts (with death animation if dying)
+            for (let ghost of ghosts) {
+                if (ghost.dying) {
+                    const elapsed = Date.now() - ghost.deathStartTime;
+                    const progress = Math.min(elapsed / 1000, 1); // 1 second animation
+                    drawGhostDeath(ghost.col * GRID_SIZE + 1, ghost.row * GRID_SIZE + 1, progress, ghost.color);
+                } else if (ghost.respawnTime === null) {
+                    // Normal ghost rendering
+                    ctx.fillStyle = ghost.color;
+                    ctx.fillRect(ghost.col * GRID_SIZE + 1, ghost.row * GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2);
+                    ctx.fillStyle = 'white';
+                    ctx.font = '12px Arial';
+                    ctx.fillText('●', ghost.col * GRID_SIZE + 5, ghost.row * GRID_SIZE + 12);
+                }
+            }
+
+            // Draw hearts
+            for (let heart of hearts) {
+                drawHeart(heart.col * GRID_SIZE + GRID_SIZE / 2, heart.row * GRID_SIZE + GRID_SIZE / 2, 6, '#FF69B4');
+            }
+
+            // Draw power-up indicator
+            if (gameState.powerUpActive) {
+                ctx.fillStyle = 'rgba(255, 105, 180, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#FF69B4';
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText('POWER-UP!', 10, 20);
+                
+                // Draw countdown timer in top right corner
+                const elapsed = Date.now() - gameState.powerUpTime;
+                const remaining = Math.max(0, gameState.powerUpDuration - elapsed) / 1000;
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText(remaining.toFixed(1) + 's', canvas.width - 10, 20);
+                ctx.textAlign = 'left';
+            }
+
+            // Draw game over screen if needed
+            if (gameState.gameOver) {
+                drawGameOverScreen();
+            }
+        }
+
+        function drawPacmanDeath(x, y, progress) {
+            // progress goes from 0 to 1
+            const size = GRID_SIZE - 4;
+            const centerX = x + size / 2;
+            const centerY = y + size / 2;
+            
+            // Shrinking circle animation with opening mouth
+            const radius = (size / 2) * (1 - progress);
+            const mouthAngle = Math.PI * 0.25 * (1 + progress); // Mouth opens wider
+            
+            ctx.fillStyle = '#FFFF00';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, mouthAngle, Math.PI * 2 - mouthAngle);
+            ctx.lineTo(centerX, centerY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Fade out effect
+            ctx.globalAlpha = 1 - progress;
+            ctx.globalAlpha = 1;
+        }
+
+        function drawGhostDeath(x, y, progress, color) {
+            // progress goes from 0 to 1
+            const size = GRID_SIZE - 2;
+            
+            // Ghost breaks apart and fades
+            ctx.globalAlpha = 1 - progress;
+            
+            // Draw fragments spreading outward
+            const fragmentCount = 8;
+            const spreadDistance = progress * 15;
+            
+            for (let i = 0; i < fragmentCount; i++) {
+                const angle = (Math.PI * 2 * i) / fragmentCount;
+                const offsetX = Math.cos(angle) * spreadDistance;
+                const offsetY = Math.sin(angle) * spreadDistance;
+                const fragmentSize = (size / 4) * (1 - progress * 0.5);
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(
+                    x + size / 2 + offsetX - fragmentSize / 2,
+                    y + size / 2 + offsetY - fragmentSize / 2,
+                    fragmentSize,
+                    fragmentSize
+                );
+            }
+            
+            // Draw eyes fading
+            ctx.fillStyle = 'white';
+            const eyeSize = 3 * (1 - progress);
+            ctx.fillRect(x + size / 3 - eyeSize / 2, y + size / 3 - eyeSize / 2, eyeSize, eyeSize);
+            ctx.fillRect(x + 2 * size / 3 - eyeSize / 2, y + size / 3 - eyeSize / 2, eyeSize, eyeSize);
+            
+            ctx.globalAlpha = 1;
+        }
+
+        function drawHeart(x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x, y + size / 2);
+            ctx.bezierCurveTo(x - size, y - size / 2, x - size * 1.5, y + size / 2, x, y + size * 1.2);
+            ctx.bezierCurveTo(x + size * 1.5, y + size / 2, x + size, y - size / 2, x, y + size / 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawGameOverScreen() {
+            // Dark overlay
+            ctx.fillStyle = 'rgba(10, 10, 26, 0.9)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Check if won or lost
+            if (gameState.won) {
+                // Level complete screen
+                ctx.fillStyle = '#00ffff';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('LEVEL COMPLETE!', canvas.width / 2, canvas.height / 2 - 80);
+
+                // Final score
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 32px Arial';
+                ctx.fillText(`Score: ${gameState.score}`, canvas.width / 2, canvas.height / 2 - 20);
+
+                // Level reached
+                ctx.fillStyle = '#00d9ff';
+                ctx.font = '24px Arial';
+                ctx.fillText(`Level ${gameState.level} Cleared! 🎉`, canvas.width / 2, canvas.height / 2 + 30);
+
+                // Continue button
+                ctx.fillStyle = '#FF69B4';
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 2;
+                ctx.fillRect(canvas.width / 2 - 150, canvas.height / 2 + 70, 300, 50);
+                ctx.strokeRect(canvas.width / 2 - 150, canvas.height / 2 + 70, 300, 50);
+                
+                ctx.fillStyle = '#0a0a1a';
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText(`CONTINUE TO LEVEL ${gameState.level + 1}`, canvas.width / 2, canvas.height / 2 + 103);
+
+            } else {
+                // Game over text
+                ctx.fillStyle = '#FF69B4';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 60);
+
+                // Final score
+                ctx.fillStyle = '#00ffff';
+                ctx.font = 'bold 32px Arial';
+                ctx.fillText(`Final Score: ${gameState.score}`, canvas.width / 2, canvas.height / 2);
+
+                // Level reached
+                ctx.fillStyle = '#00d9ff';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Level: ${gameState.level}`, canvas.width / 2, canvas.height / 2 + 50);
+
+                // Restart instructions
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 18px Arial';
+                ctx.fillText('Press R to restart or click to go back', canvas.width / 2, canvas.height / 2 + 120);
+            }
+
+            ctx.textAlign = 'left';
+        }
+
+        function restartGame() {
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.level = 1;
+            gameState.gameOver = false;
+            gameState.won = false;
+            gameState.powerUpActive = false;
+            gameState.lastHeartShootTime = 0;
+            pacman.respawnTime = null;
+            setupLevel(1);
+            // Restart music
+            playMusic();
+        }
+
+        function checkGhostRespawn() {
+            for (let ghost of ghosts) {
+                // End death animation after 1 second
+                if (ghost.dying) {
+                    const elapsed = Date.now() - ghost.deathStartTime;
+                    if (elapsed >= 1000) {
+                        ghost.dying = false;
+                        ghost.deathStartTime = null;
+                    }
+                }
+                
+                if (ghost.respawnTime !== null && !ghost.dying && Date.now() >= ghost.respawnTime) {
+                    // Respawn the ghost
+                    ghost.respawnTime = null;
+                    let validSpot = false;
+                    let attempts = 0;
+                    while (!validSpot && attempts < 50) {
+                        ghost.row = Math.floor(Math.random() * maze.length);
+                        ghost.col = Math.floor(Math.random() * maze[0].length);
+                        if (maze[ghost.row] && maze[ghost.row][ghost.col] === 0) {
+                            validSpot = true;
+                        }
+                        attempts++;
+                    }
+                }
+            }
+        }
+
+        function checkPacmanRespawn() {
+            // End death animation after 1 second
+            if (pacman.dying && !gameState.gameOver) {
+                const elapsed = Date.now() - pacman.deathStartTime;
+                if (elapsed >= 1000) {
+                    pacman.dying = false;
+                    pacman.deathStartTime = null;
+                }
+            }
+            
+            if (pacman.respawnTime !== null && !pacman.dying && Date.now() >= pacman.respawnTime) {
+                // Respawn Pac-Man
+                pacman.respawnTime = null;
+                pacman.row = 1;
+                pacman.col = 1;
+                pacman.direction = 'right';
+                pacman.nextDirection = 'right';
+                document.getElementById('statusMessage').textContent = `${gameState.lives} lives left - Keep going!`;
+            }
+        }
+
+        function gameLoop() {
+            gameState.frameCount++;
+            gameState.heartFrameCount++;
+            gameState.animationFrame++;
+            
+            if (gameState.frameCount % gameState.updateInterval === 0) {
+                if (!gameState.gameOver) {
+                    movePacman();
+                    moveGhosts();
+                    spawnRose();
+                    shootHearts();
+                    checkCollisions();
+                    updatePowerUp();
+                }
+            }
+            
+            // Hearts update faster (every 7 frames instead of 8)
+            if (gameState.heartFrameCount % gameState.heartUpdateInterval === 0) {
+                if (!gameState.gameOver) {
+                    moveHearts();
+                }
+            }
+            
+            // Check if any ghosts should respawn
+            checkGhostRespawn();
+            
+            // Check if Pac-Man should respawn
+            checkPacmanRespawn();
+            
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function setupLevel(level) {
+            gameState.level = level;
+            gameState.frameCount = 0;
+            gameState.heartFrameCount = 0;
+            gameState.animationFrame = 0;
+            gameState.powerUpActive = false;
+            gameState.lastHeartShootTime = 0;
+            gameState.lastRoseSpawnTime = 0;
+            gameState.gameOver = false;
+            gameState.won = false;
+            initPellets();
+            initGhosts();
+            rose = null;
+            hearts = [];
+            pacman.row = 1;
+            pacman.col = 1;
+            pacman.respawnTime = null;
+            pacman.dying = false;
+            pacman.deathStartTime = null;
+            pacman.direction = 'right';
+            pacman.nextDirection = 'right';
+            document.getElementById('statusMessage').textContent = `Level ${level} - Eat pellets and roses to power up!`;
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            // Restart game
+            if (e.key === 'r' || e.key === 'R') {
+                if (gameState.gameOver) {
+                    restartGame();
+                }
+            }
+            if (e.key === 'ArrowUp') {
+                pacman.nextDirection = 'up';
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowDown') {
+                pacman.nextDirection = 'down';
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowLeft') {
+                pacman.nextDirection = 'left';
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowRight') {
+                pacman.nextDirection = 'right';
+                e.preventDefault();
+            }
+        });
+
+        // Click handler for continue button
+        canvas.addEventListener('click', (e) => {
+            if (gameState.gameOver && gameState.won) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Check if click is on the continue button
+                const btnX = canvas.width / 2 - 150;
+                const btnY = canvas.height / 2 + 70;
+                const btnWidth = 300;
+                const btnHeight = 50;
+                
+                if (x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight) {
+                    setupLevel(gameState.level + 1);
+                }
+            }
+        });
+
+        // Initialize and start game
+        setupLevel(1);
+        gameLoop();
+
+        // Update UI periodically
+        setInterval(updateUI, 100);
+    </script>
+</body>
+</html>
