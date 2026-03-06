@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Temperature Station Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    :root {
+      --ink: #111418;
+      --muted: #4a5666;
+      --paper: #f8f6f2;
+      --accent: #0f8f7a;
+      --accent-soft: #b9efe7;
+      --warning: #e4512d;
+      --panel: rgba(255, 255, 255, 0.86);
+      --line: rgba(17, 20, 24, 0.12);
+      --shadow: 0 12px 30px rgba(11, 24, 34, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(1100px 500px at -10% 0%, rgba(14, 143, 122, 0.22), transparent 70%),
+        radial-gradient(900px 500px at 110% 20%, rgba(228, 81, 45, 0.22), transparent 70%),
+        repeating-linear-gradient(135deg, rgba(17, 20, 24, 0.02) 0, rgba(17, 20, 24, 0.02) 2px, transparent 2px, transparent 14px),
+        var(--paper);
+      padding: 24px 14px 36px;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .hero,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(2px);
+    }
+
+    .hero {
+      padding: 20px 20px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -50px;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      border: 2px dashed rgba(17, 20, 24, 0.22);
+      transform: rotate(14deg);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 1rem + 2.1vw, 2.15rem);
+      letter-spacing: -0.02em;
+      max-width: 760px;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stats {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.84rem;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .controls {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .slider-wrap {
+      display: grid;
+      gap: 5px;
+    }
+
+    .slider-wrap output {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      padding: 0;
+    }
+
+    .charts {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
+
+    .panel {
+      padding: 10px;
+      opacity: 0;
+      transform: translateY(14px);
+      animation: rise 0.45s ease forwards;
+    }
+
+    .panel:nth-child(2) { animation-delay: 0.06s; }
+    .panel:nth-child(3) { animation-delay: 0.12s; }
+
+    .chart {
+      width: 100%;
+      min-height: 430px;
+    }
+
+    .table-panel {
+      padding: 12px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+      min-width: 580px;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    th {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    td:nth-child(2),
+    td:nth-child(3),
+    td:nth-child(4),
+    td:nth-child(5) {
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .empty {
+      color: var(--warning);
+      font-size: 0.95rem;
+      padding: 8px;
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .chart {
+        min-height: 360px;
+      }
+    }
+
+    @keyframes rise {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>Interactive Temperature Explorer</h1>
+      <p>
+        Visual summary of <code>calculate_Temp.R</code> output. Each station includes min, mean,
+        and max temperature values computed from the large measurements dataset.
+      </p>
+      <div class="stats" id="summaryStats"></div>
+    </section>
+
+    <section class="panel controls">
+      <div>
+        <label for="search">Station Search</label>
+        <input id="search" type="text" placeholder="Try: Addis, London, Tokyo...">
+      </div>
+      <div>
+        <label for="metric">Ranking Metric</label>
+        <select id="metric">
+          <option value="mean" selected>Mean temperature</option>
+          <option value="max">Max temperature</option>
+          <option value="min">Min temperature</option>
+          <option value="spread">Temperature spread (max - min)</option>
+        </select>
+      </div>
+      <div>
+        <label for="sortDir">Sort Direction</label>
+        <select id="sortDir">
+          <option value="desc" selected>Highest first</option>
+          <option value="asc">Lowest first</option>
+        </select>
+      </div>
+      <div class="slider-wrap">
+        <label for="topN">Top N stations in ranking</label>
+        <input id="topN" type="range" min="10" max="120" value="40" step="5">
+        <output id="topNValue">40</output>
+      </div>
+      <div>
+        <label for="meanThreshold">Minimum mean temperature</label>
+        <input id="meanThreshold" type="number" value="-15" step="0.1">
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="panel">
+        <div id="rankingChart" class="chart"></div>
+      </div>
+      <div class="panel">
+        <div id="scatterChart" class="chart"></div>
+      </div>
+      <div class="panel table-panel">
+        <div class="empty" id="emptyMessage">No stations match your filters.</div>
+        <table id="stationTable" aria-label="Filtered stations table">
+          <thead>
+            <tr>
+              <th>Station</th>
+              <th>Min</th>
+              <th>Mean</th>
+              <th>Max</th>
+              <th>Spread</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const controls = {
+      search: document.getElementById("search"),
+      metric: document.getElementById("metric"),
+      sortDir: document.getElementById("sortDir"),
+      topN: document.getElementById("topN"),
+      topNValue: document.getElementById("topNValue"),
+      meanThreshold: document.getElementById("meanThreshold")
+    };
+
+    const summaryStats = document.getElementById("summaryStats");
+    const tableBody = document.querySelector("#stationTable tbody");
+    const emptyMessage = document.getElementById("emptyMessage");
+
+    function parseResultText(text) {
+      const clean = text.trim();
+      const data = [];
+      const pattern = /(?:\{|,\s)([^=]+)=(-?\d+\.\d+)\/(-?\d+\.\d+)\/(-?\d+\.\d+)/g;
+      let match;
+
+      while ((match = pattern.exec(clean)) !== null) {
+        const station = match[1].trim();
+        const min = Number.parseFloat(match[2]);
+        const mean = Number.parseFloat(match[3]);
+        const max = Number.parseFloat(match[4]);
+
+        data.push({
+          station,
+          min,
+          mean,
+          max,
+          spread: Number((max - min).toFixed(1))
+        });
+      }
+
+      return data;
+    }
+
+    function formatTemp(v) {
+      return `${v.toFixed(1)} C`;
+    }
+
+    function setSummary(data) {
+      const means = data.map((d) => d.mean);
+      const spreads = data.map((d) => d.spread);
+      const globalMin = Math.min(...data.map((d) => d.min));
+      const globalMax = Math.max(...data.map((d) => d.max));
+      const avgMean = means.reduce((a, b) => a + b, 0) / means.length;
+      const avgSpread = spreads.reduce((a, b) => a + b, 0) / spreads.length;
+
+      const badges = [
+        `stations=${data.length}`,
+        `mean(avg)=${avgMean.toFixed(1)} C`,
+        `spread(avg)=${avgSpread.toFixed(1)} C`,
+        `global_min=${globalMin.toFixed(1)} C`,
+        `global_max=${globalMax.toFixed(1)} C`
+      ];
+
+      summaryStats.innerHTML = badges.map((x) => `<span class="badge">${x}</span>`).join("");
+    }
+
+    function sortData(data, metric, direction) {
+      const sorted = [...data].sort((a, b) => a[metric] - b[metric]);
+      return direction === "desc" ? sorted.reverse() : sorted;
+    }
+
+    function filteredData(allData) {
+      const search = controls.search.value.trim().toLowerCase();
+      const meanThreshold = Number.parseFloat(controls.meanThreshold.value);
+
+      return allData.filter((row) => {
+        const hitSearch = row.station.toLowerCase().includes(search);
+        const hitMean = Number.isNaN(meanThreshold) ? true : row.mean >= meanThreshold;
+        return hitSearch && hitMean;
+      });
+    }
+
+    function renderTable(data) {
+      if (data.length === 0) {
+        emptyMessage.style.display = "block";
+      } else {
+        emptyMessage.style.display = "none";
+      }
+
+      const rows = data.slice(0, 20).map((d) => `
+        <tr>
+          <td>${d.station}</td>
+          <td>${d.min.toFixed(1)}</td>
+          <td>${d.mean.toFixed(1)}</td>
+          <td>${d.max.toFixed(1)}</td>
+          <td>${d.spread.toFixed(1)}</td>
+        </tr>
+      `);
+
+      tableBody.innerHTML = rows.join("");
+    }
+
+    function renderRanking(data, metric, topN) {
+      const subset = data.slice(0, topN).reverse();
+
+      Plotly.react("rankingChart", [{
+        type: "bar",
+        orientation: "h",
+        x: subset.map((d) => d[metric]),
+        y: subset.map((d) => d.station),
+        marker: {
+          color: subset.map((d) => d.mean),
+          colorscale: [
+            [0, "#0f8f7a"],
+            [1, "#e4512d"]
+          ],
+          line: {
+            color: "rgba(17,20,24,0.2)",
+            width: 1
+          }
+        },
+        hovertemplate: [
+          "<b>%{y}</b>",
+          ` ${metric}: %{x:.1f} C`,
+          "<extra></extra>"
+        ].join("<br>")
+      }], {
+        title: `Station Ranking by ${metric.toUpperCase()} (Top ${topN})`,
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(255,255,255,0.65)",
+        margin: { l: 170, r: 28, t: 56, b: 42 },
+        xaxis: { title: "Temperature (C)", gridcolor: "rgba(17,20,24,0.09)" },
+        yaxis: { automargin: true },
+        font: { family: "Space Grotesk, sans-serif", color: "#111418" }
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function renderScatter(data) {
+      Plotly.react("scatterChart", [{
+        mode: "markers",
+        type: "scatter",
+        x: data.map((d) => d.min),
+        y: data.map((d) => d.max),
+        text: data.map((d) => d.station),
+        marker: {
+          size: data.map((d) => Math.max(8, d.spread / 2.3)),
+          color: data.map((d) => d.mean),
+          colorscale: "Viridis",
+          line: { color: "rgba(17,20,24,0.35)", width: 1 },
+          opacity: 0.84
+        },
+        hovertemplate: [
+          "<b>%{text}</b>",
+          "min: %{x:.1f} C",
+          "max: %{y:.1f} C",
+          "<extra></extra>"
+        ].join("<br>")
+      }], {
+        title: "Min vs Max Temperature per Station",
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(255,255,255,0.65)",
+        margin: { l: 58, r: 24, t: 56, b: 52 },
+        xaxis: {
+          title: "Min temperature (C)",
+          zerolinecolor: "rgba(17,20,24,0.16)",
+          gridcolor: "rgba(17,20,24,0.09)"
+        },
+        yaxis: {
+          title: "Max temperature (C)",
+          zerolinecolor: "rgba(17,20,24,0.16)",
+          gridcolor: "rgba(17,20,24,0.09)"
+        },
+        font: { family: "Space Grotesk, sans-serif", color: "#111418" }
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function update(allData) {
+      const filtered = filteredData(allData);
+      const metric = controls.metric.value;
+      const direction = controls.sortDir.value;
+      const topN = Number.parseInt(controls.topN.value, 10);
+
+      controls.topNValue.textContent = String(topN);
+
+      const sorted = sortData(filtered, metric, direction);
+      renderRanking(sorted, metric, topN);
+      renderScatter(filtered);
+      renderTable(sorted);
+    }
+
+    async function init() {
+      const response = await fetch("./result_R.txt");
+      const text = await response.text();
+      const data = parseResultText(text);
+
+      if (!data.length) {
+        throw new Error("No station rows parsed from result_R.txt");
+      }
+
+      setSummary(data);
+      update(data);
+
+      [
+        controls.search,
+        controls.metric,
+        controls.sortDir,
+        controls.topN,
+        controls.meanThreshold
+      ].forEach((input) => {
+        const event = input.tagName === "INPUT" && input.type === "range" ? "input" : "change";
+        input.addEventListener(event, () => update(data));
+        if (event !== "input") {
+          input.addEventListener("input", () => update(data));
+        }
+      });
+    }
+
+    init().catch((err) => {
+      const message = `Failed to load chart data: ${err.message}`;
+      summaryStats.innerHTML = `<span class="badge" style="border-color:#e4512d;color:#e4512d">${message}</span>`;
+    });
+  </script>
+</body>
+</html>
