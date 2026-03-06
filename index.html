@@ -1,323 +1,514 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coding Blog - By Emily Shen</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Temperature Station Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    :root {
+      --ink: #111418;
+      --muted: #4a5666;
+      --paper: #f8f6f2;
+      --accent: #0f8f7a;
+      --accent-soft: #b9efe7;
+      --warning: #e4512d;
+      --panel: rgba(255, 255, 255, 0.86);
+      --line: rgba(17, 20, 24, 0.12);
+      --shadow: 0 12px 30px rgba(11, 24, 34, 0.15);
+    }
 
-        body {
-            font-family: 'Courier New', 'Courier', monospace;
-            background: #0a0a1a;
-            color: #00d9ff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            position: relative;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        /* Starfield background */
-        .starfield {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(1100px 500px at -10% 0%, rgba(14, 143, 122, 0.22), transparent 70%),
+        radial-gradient(900px 500px at 110% 20%, rgba(228, 81, 45, 0.22), transparent 70%),
+        repeating-linear-gradient(135deg, rgba(17, 20, 24, 0.02) 0, rgba(17, 20, 24, 0.02) 2px, transparent 2px, transparent 14px),
+        var(--paper);
+      padding: 24px 14px 36px;
+    }
 
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
-        }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+      animation: fadeIn 0.6s ease;
+    }
 
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
+    .hero,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(2px);
+    }
 
-        header {
-            background: rgba(10, 10, 26, 0.95);
-            border-bottom: 2px solid #00d9ff;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
-            position: relative;
-            z-index: 10;
-        }
+    .hero {
+      padding: 20px 20px 18px;
+      position: relative;
+      overflow: hidden;
+    }
 
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #00d9ff;
-            text-shadow: 0 0 10px #00d9ff, 0 0 20px rgba(0, 217, 255, 0.5);
-            letter-spacing: 2px;
-        }
+    .hero::before {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -50px;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      border: 2px dashed rgba(17, 20, 24, 0.22);
+      transform: rotate(14deg);
+    }
 
-        header p {
-            font-size: 1.1rem;
-            color: #00ffff;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 1rem + 2.1vw, 2.15rem);
+      letter-spacing: -0.02em;
+      max-width: 760px;
+    }
 
-        nav {
-            background: rgba(10, 10, 26, 0.95);
-            padding: 1rem;
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-            border-bottom: 1px solid #00d9ff;
-            position: relative;
-            z-index: 10;
-        }
+    .hero p {
+      margin: 8px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
 
-        nav a {
-            color: #00ffff;
-            text-decoration: none;
-            font-size: 1rem;
-            padding: 0.5rem 1rem;
-            border: 1px solid #00d9ff;
-            border-radius: 3px;
-            transition: all 0.3s ease;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
+    .stats {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-        nav a:hover {
-            background: rgba(0, 217, 255, 0.2);
-            box-shadow: 0 0 15px #00d9ff;
-            text-shadow: 0 0 10px #00d9ff;
-        }
+    .badge {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.84rem;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
 
-        main {
-            flex: 1;
-            padding: 3rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            position: relative;
-            z-index: 5;
-        }
+    .controls {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      align-items: end;
+    }
 
-        .hero {
-            background: rgba(10, 10, 26, 0.85);
-            padding: 2rem;
-            border: 1px solid #00d9ff;
-            border-radius: 5px;
-            margin-bottom: 2rem;
-            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2), inset 0 0 10px rgba(0, 217, 255, 0.1);
-        }
+    label {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
 
-        .hero h2 {
-            color: #00d9ff;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px #00d9ff;
-        }
+    input,
+    select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
 
-        .hero p {
-            color: #00ffff;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
+    .slider-wrap {
+      display: grid;
+      gap: 5px;
+    }
 
-        .projects {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
+    .slider-wrap output {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
 
-        .project-card {
-            background: rgba(10, 10, 26, 0.85);
-            padding: 2rem;
-            border: 2px solid #00d9ff;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 10px rgba(0, 217, 255, 0.1);
-        }
+    input[type="range"] {
+      accent-color: var(--accent);
+      padding: 0;
+    }
 
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
-            border-color: #00ffff;
-            background: rgba(10, 10, 26, 0.95);
-        }
+    .charts {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+    }
 
-        .project-card h3 {
-            color: #00ffff;
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 0 5px #00d9ff;
-        }
+    .panel {
+      padding: 10px;
+      opacity: 0;
+      transform: translateY(14px);
+      animation: rise 0.45s ease forwards;
+    }
 
-        .project-card .emoji {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
+    .panel:nth-child(2) { animation-delay: 0.06s; }
+    .panel:nth-child(3) { animation-delay: 0.12s; }
 
-        .project-card p {
-            color: #00d9ff;
-            line-height: 1.6;
-            flex: 1;
-            margin-bottom: 1rem;
-        }
+    .chart {
+      width: 100%;
+      min-height: 430px;
+    }
 
-        .project-card a {
-            display: inline-block;
-            background: transparent;
-            color: #00ffff;
-            padding: 0.75rem 1.5rem;
-            border: 1px solid #00d9ff;
-            border-radius: 3px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            align-self: flex-start;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-        }
+    .table-panel {
+      padding: 12px;
+      overflow: auto;
+    }
 
-        .project-card a:hover {
-            background: rgba(0, 217, 255, 0.2);
-            box-shadow: 0 0 15px #00d9ff;
-            transform: scale(1.05);
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+      min-width: 580px;
+    }
 
-        .project-card.coming-soon a {
-            color: #666;
-            border-color: #666;
-            cursor: not-allowed;
-            pointer-events: none;
-            text-shadow: none;
-        }
+    th,
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
 
-        footer {
-            background: rgba(10, 10, 26, 0.95);
-            color: #00d9ff;
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: auto;
-            border-top: 1px solid #00d9ff;
-            position: relative;
-            z-index: 10;
-        }
+    th {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
 
-        footer p {
-            font-size: 0.9rem;
-            text-shadow: 0 0 5px rgba(0, 217, 255, 0.5);
-        }
+    td:nth-child(2),
+    td:nth-child(3),
+    td:nth-child(4),
+    td:nth-child(5) {
+      font-family: "IBM Plex Mono", monospace;
+    }
 
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8rem;
-            }
+    .empty {
+      color: var(--warning);
+      font-size: 0.95rem;
+      padding: 8px;
+      display: none;
+    }
 
-            nav {
-                gap: 1rem;
-            }
+    @media (max-width: 860px) {
+      .chart {
+        min-height: 360px;
+      }
+    }
 
-            main {
-                padding: 2rem 1rem;
-            }
+    @keyframes rise {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-            .hero h2 {
-                font-size: 1.5rem;
-            }
-
-            .projects {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
 </head>
 <body>
-    <div class="starfield" id="starfield"></div>
+  <main class="page">
+    <section class="hero">
+      <h1>Interactive Temperature Explorer</h1>
+      <p>
+        Visual summary of <code>calculate_Temp.R</code> output. Each station includes min, mean,
+        and max temperature values computed from the large measurements dataset.
+      </p>
+      <div class="stats" id="summaryStats"></div>
+    </section>
 
-    <header>
-        <h1>🚀 CYBER BLOG</h1>
-        <p>[ Exploring AI • Game Development • Modern Web Technologies ]</p>
-    </header>
+    <section class="panel controls">
+      <div>
+        <label for="search">Station Search</label>
+        <input id="search" type="text" placeholder="Try: Addis, London, Tokyo...">
+      </div>
+      <div>
+        <label for="metric">Ranking Metric</label>
+        <select id="metric">
+          <option value="mean" selected>Mean temperature</option>
+          <option value="max">Max temperature</option>
+          <option value="min">Min temperature</option>
+          <option value="spread">Temperature spread (max - min)</option>
+        </select>
+      </div>
+      <div>
+        <label for="sortDir">Sort Direction</label>
+        <select id="sortDir">
+          <option value="desc" selected>Highest first</option>
+          <option value="asc">Lowest first</option>
+        </select>
+      </div>
+      <div class="slider-wrap">
+        <label for="topN">Top N stations in ranking</label>
+        <input id="topN" type="range" min="10" max="120" value="40" step="5">
+        <output id="topNValue">40</output>
+      </div>
+      <div>
+        <label for="meanThreshold">Minimum mean temperature</label>
+        <input id="meanThreshold" type="number" value="-15" step="0.1">
+      </div>
+    </section>
 
-    <nav>
-        <a href="index.html">HOME</a>
-        <a href="pacman.html">🎮 PAC-MAN ARENA</a>
-        <a href="arxiv-feed.html">📄 RESEARCH NEXUS</a>
-    </nav>
+    <section class="charts">
+      <div class="panel">
+        <div id="rankingChart" class="chart"></div>
+      </div>
+      <div class="panel">
+        <div id="scatterChart" class="chart"></div>
+      </div>
+      <div class="panel table-panel">
+        <div class="empty" id="emptyMessage">No stations match your filters.</div>
+        <table id="stationTable" aria-label="Filtered stations table">
+          <thead>
+            <tr>
+              <th>Station</th>
+              <th>Min</th>
+              <th>Mean</th>
+              <th>Max</th>
+              <th>Spread</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-    <main>
-        <section class="hero">
-            <h2>> WELCOME TO THE DIGITAL FRONTIER</h2>
-            <p>
-                ▌ This coding blog showcases projects built with artificial intelligence assistance. 
-                From valentine's day themed Pac-man to arXiv paper feeds, this blog showcases the wide spectrum of coding. ▌
-            </p>
-        </section>
+  <script>
+    const controls = {
+      search: document.getElementById("search"),
+      metric: document.getElementById("metric"),
+      sortDir: document.getElementById("sortDir"),
+      topN: document.getElementById("topN"),
+      topNValue: document.getElementById("topNValue"),
+      meanThreshold: document.getElementById("meanThreshold")
+    };
 
-        <section class="projects">
-            <div class="project-card">
-                <div class="emoji">🎮</div>
-                <h3>> VALENTINE'S PAC-MAN ARENA</h3>
-                <p>
-                    ▌ It's valentine's day, even in the Pac-Man world! Navigate neon mazes, consume pellets, 
-                    and activate rose power-ups to fire hearts at enemy ghosts. Kill em' with love and kindness! ▌
-                </p>
-                <a href="pacman.html">[ ENTER GAME ]</a>
-            </div>
+    const summaryStats = document.getElementById("summaryStats");
+    const tableBody = document.querySelector("#stationTable tbody");
+    const emptyMessage = document.getElementById("emptyMessage");
 
-            <div class="project-card">
-                <div class="emoji">📄</div>
-                <h3>> RESEARCH NEXUS - ARXIV FEED</h3>
-                <p>
-                    ▌ Stay connected to the latest research frontier from arXiv. This neural network 
-                    automatically synchronizes daily with papers matching cutting-edge research topics. 
-                    Explore the latest breakthroughs in AI and computer science, and experience knowledge without boundaries! ▌
-                </p>
-                <a href="arxiv-feed.html">[ ACCESS FEED ]</a>
-            </div>
+    function parseResultText(text) {
+      const clean = text.trim();
+      const data = [];
+      const pattern = /(?:\{|,\s)([^=]+)=(-?\d+\.\d+)\/(-?\d+\.\d+)\/(-?\d+\.\d+)/g;
+      let match;
 
-            <div class="project-card coming-soon">
-                <div class="emoji">✨</div>
-                <h3>> FUTURE PROTOCOLS</h3>
-                <p>
-                    ▌ Additional cybernetic projects incoming. This sector is expandable for future 
-                    assignments and creative coding endeavors. The next evolution is being processed. 
-                    Stand by for system updates. ▌
-                </p>
-                <a href="#">[ COMING SOON ]</a>
-            </div>
-        </section>
-    </main>
+      while ((match = pattern.exec(clean)) !== null) {
+        const station = match[1].trim();
+        const min = Number.parseFloat(match[2]);
+        const mean = Number.parseFloat(match[3]);
+        const max = Number.parseFloat(match[4]);
 
-    <footer>
-        <p>▌ &copy; 2026 CYBER BLOG NEXUS | Built by Emily Shen with AI assistance for BST 236 ▌</p>
-    </footer>
+        data.push({
+          station,
+          min,
+          mean,
+          max,
+          spread: Number((max - min).toFixed(1))
+        });
+      }
 
-    <script>
-        // Generate starfield background
-        const starfield = document.getElementById('starfield');
-        const starCount = 100;
+      return data;
+    }
 
-        for (let i = 0; i < starCount; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            starfield.appendChild(star);
+    function formatTemp(v) {
+      return `${v.toFixed(1)} C`;
+    }
+
+    function setSummary(data) {
+      const means = data.map((d) => d.mean);
+      const spreads = data.map((d) => d.spread);
+      const globalMin = Math.min(...data.map((d) => d.min));
+      const globalMax = Math.max(...data.map((d) => d.max));
+      const avgMean = means.reduce((a, b) => a + b, 0) / means.length;
+      const avgSpread = spreads.reduce((a, b) => a + b, 0) / spreads.length;
+
+      const badges = [
+        `stations=${data.length}`,
+        `mean(avg)=${avgMean.toFixed(1)} C`,
+        `spread(avg)=${avgSpread.toFixed(1)} C`,
+        `global_min=${globalMin.toFixed(1)} C`,
+        `global_max=${globalMax.toFixed(1)} C`
+      ];
+
+      summaryStats.innerHTML = badges.map((x) => `<span class="badge">${x}</span>`).join("");
+    }
+
+    function sortData(data, metric, direction) {
+      const sorted = [...data].sort((a, b) => a[metric] - b[metric]);
+      return direction === "desc" ? sorted.reverse() : sorted;
+    }
+
+    function filteredData(allData) {
+      const search = controls.search.value.trim().toLowerCase();
+      const meanThreshold = Number.parseFloat(controls.meanThreshold.value);
+
+      return allData.filter((row) => {
+        const hitSearch = row.station.toLowerCase().includes(search);
+        const hitMean = Number.isNaN(meanThreshold) ? true : row.mean >= meanThreshold;
+        return hitSearch && hitMean;
+      });
+    }
+
+    function renderTable(data) {
+      if (data.length === 0) {
+        emptyMessage.style.display = "block";
+      } else {
+        emptyMessage.style.display = "none";
+      }
+
+      const rows = data.slice(0, 20).map((d) => `
+        <tr>
+          <td>${d.station}</td>
+          <td>${d.min.toFixed(1)}</td>
+          <td>${d.mean.toFixed(1)}</td>
+          <td>${d.max.toFixed(1)}</td>
+          <td>${d.spread.toFixed(1)}</td>
+        </tr>
+      `);
+
+      tableBody.innerHTML = rows.join("");
+    }
+
+    function renderRanking(data, metric, topN) {
+      const subset = data.slice(0, topN).reverse();
+
+      Plotly.react("rankingChart", [{
+        type: "bar",
+        orientation: "h",
+        x: subset.map((d) => d[metric]),
+        y: subset.map((d) => d.station),
+        marker: {
+          color: subset.map((d) => d.mean),
+          colorscale: [
+            [0, "#0f8f7a"],
+            [1, "#e4512d"]
+          ],
+          line: {
+            color: "rgba(17,20,24,0.2)",
+            width: 1
+          }
+        },
+        hovertemplate: [
+          "<b>%{y}</b>",
+          ` ${metric}: %{x:.1f} C`,
+          "<extra></extra>"
+        ].join("<br>")
+      }], {
+        title: `Station Ranking by ${metric.toUpperCase()} (Top ${topN})`,
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(255,255,255,0.65)",
+        margin: { l: 170, r: 28, t: 56, b: 42 },
+        xaxis: { title: "Temperature (C)", gridcolor: "rgba(17,20,24,0.09)" },
+        yaxis: { automargin: true },
+        font: { family: "Space Grotesk, sans-serif", color: "#111418" }
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function renderScatter(data) {
+      Plotly.react("scatterChart", [{
+        mode: "markers",
+        type: "scatter",
+        x: data.map((d) => d.min),
+        y: data.map((d) => d.max),
+        text: data.map((d) => d.station),
+        marker: {
+          size: data.map((d) => Math.max(8, d.spread / 2.3)),
+          color: data.map((d) => d.mean),
+          colorscale: "Viridis",
+          line: { color: "rgba(17,20,24,0.35)", width: 1 },
+          opacity: 0.84
+        },
+        hovertemplate: [
+          "<b>%{text}</b>",
+          "min: %{x:.1f} C",
+          "max: %{y:.1f} C",
+          "<extra></extra>"
+        ].join("<br>")
+      }], {
+        title: "Min vs Max Temperature per Station",
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(255,255,255,0.65)",
+        margin: { l: 58, r: 24, t: 56, b: 52 },
+        xaxis: {
+          title: "Min temperature (C)",
+          zerolinecolor: "rgba(17,20,24,0.16)",
+          gridcolor: "rgba(17,20,24,0.09)"
+        },
+        yaxis: {
+          title: "Max temperature (C)",
+          zerolinecolor: "rgba(17,20,24,0.16)",
+          gridcolor: "rgba(17,20,24,0.09)"
+        },
+        font: { family: "Space Grotesk, sans-serif", color: "#111418" }
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function update(allData) {
+      const filtered = filteredData(allData);
+      const metric = controls.metric.value;
+      const direction = controls.sortDir.value;
+      const topN = Number.parseInt(controls.topN.value, 10);
+
+      controls.topNValue.textContent = String(topN);
+
+      const sorted = sortData(filtered, metric, direction);
+      renderRanking(sorted, metric, topN);
+      renderScatter(filtered);
+      renderTable(sorted);
+    }
+
+    async function init() {
+      const response = await fetch("./result_R.txt");
+      const text = await response.text();
+      const data = parseResultText(text);
+
+      if (!data.length) {
+        throw new Error("No station rows parsed from result_R.txt");
+      }
+
+      setSummary(data);
+      update(data);
+
+      [
+        controls.search,
+        controls.metric,
+        controls.sortDir,
+        controls.topN,
+        controls.meanThreshold
+      ].forEach((input) => {
+        const event = input.tagName === "INPUT" && input.type === "range" ? "input" : "change";
+        input.addEventListener(event, () => update(data));
+        if (event !== "input") {
+          input.addEventListener("input", () => update(data));
         }
-    </script>
+      });
+    }
+
+    init().catch((err) => {
+      const message = `Failed to load chart data: ${err.message}`;
+      summaryStats.innerHTML = `<span class="badge" style="border-color:#e4512d;color:#e4512d">${message}</span>`;
+    });
+  </script>
 </body>
 </html>
