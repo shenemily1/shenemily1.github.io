@@ -185,15 +185,25 @@
             border-radius: 3px;
             text-decoration: none;
             transition: all 0.3s ease;
-            align-self: flex-start;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            margin-right: 1rem;
         }
 
         .project-card a:hover {
             background: rgba(0, 217, 255, 0.2);
             box-shadow: 0 0 15px #00d9ff;
             transform: scale(1.05);
+        }
+
+        .project-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .project-buttons a:last-child {
+            margin-right: 0;
         }
 
         footer {
@@ -293,13 +303,16 @@
 
             <div class="project-card">
                 <div class="emoji">📑</div>
-                <h3>> RESEARCH PAPER</h3>
+                <h3>> MIDTERM PROJECT & RESEARCH</h3>
                 <p>
-                    ▌ Dive into cutting-edge research and analysis. This comprehensive paper explores 
-                    innovative techniques and methodologies in modern computer science and artificial intelligence. 
-                    Access detailed insights and findings from the frontier of technology! ▌
+                    ▌ Comprehensive presentation of the midterm project with detailed walkthrough and analysis. 
+                    Access the tutorial video to understand implementation details, and review the complete research paper 
+                    for theoretical foundations and advanced insights! ▌
                 </p>
-                <a href="paper.pdf">[ DOWNLOAD PAPER ]</a>
+                <div class="project-buttons">
+                    <a href="tutorial.mp4">[ WATCH TUTORIAL ]</a>
+                    <a href="paper.pdf">[ DOWNLOAD PAPER ]</a>
+                </div>
             </div>
         </section>
     </main>
