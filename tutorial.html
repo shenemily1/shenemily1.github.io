@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAMA Paper Network Creation Workflow Tutorial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Courier', monospace;
+            background: #0a0a1a;
+            color: #00d9ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Starfield background */
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        header {
+            background: rgba(10, 10, 26, 0.95);
+            border-bottom: 2px solid #00d9ff;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #00d9ff;
+            text-shadow: 0 0 10px #00d9ff, 0 0 20px rgba(0, 217, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        nav {
+            background: rgba(10, 10, 26, 0.95);
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #00d9ff;
+            position: relative;
+            z-index: 10;
+        }
+
+        nav a {
+            color: #00ffff;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #00d9ff;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        nav a:hover {
+            background: rgba(0, 217, 255, 0.2);
+            box-shadow: 0 0 15px #00d9ff;
+            text-shadow: 0 0 10px #00d9ff;
+        }
+
+        main {
+            flex: 1;
+            padding: 3rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 5;
+        }
+
+        .table-of-contents {
+            background: rgba(10, 10, 26, 0.85);
+            padding: 2rem;
+            border: 1px solid #00d9ff;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .table-of-contents h2 {
+            color: #00d9ff;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #00d9ff;
+        }
+
+        .table-of-contents ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .table-of-contents li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .table-of-contents li:before {
+            content: "▸ ";
+            color: #00ffff;
+            margin-left: -1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .table-of-contents a {
+            color: #00ffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .table-of-contents a:hover {
+            color: #00d9ff;
+            text-shadow: 0 0 10px #00d9ff;
+        }
+
+        .tutorial-section {
+            background: rgba(10, 10, 26, 0.85);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #00d9ff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.1);
+        }
+
+        .tutorial-section h2 {
+            color: #00d9ff;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+            text-shadow: 0 0 10px #00d9ff;
+            border-bottom: 1px solid #00d9ff;
+            padding-bottom: 0.5rem;
+        }
+
+        .tutorial-section h3 {
+            color: #00ffff;
+            font-size: 1.3rem;
+            margin: 1.5rem 0 0.5rem 0;
+            text-shadow: 0 0 5px #00d9ff;
+        }
+
+        .tutorial-section p {
+            color: #00d9ff;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-section ul, .tutorial-section ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-section li {
+            color: #00d9ff;
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .tutorial-section strong {
+            color: #00ffff;
+            text-shadow: 0 0 5px #00d9ff;
+        }
+
+        .code-block {
+            background: rgba(0, 10, 20, 0.9);
+            border: 1px solid #00ffff;
+            border-radius: 3px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            color: #00ff00;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+        }
+
+        .code-block code {
+            color: #00ff00;
+        }
+
+        .feature-box {
+            background: rgba(0, 217, 255, 0.1);
+            border-left: 3px solid #00ffff;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #00d9ff;
+        }
+
+        footer {
+            background: rgba(10, 10, 26, 0.95);
+            color: #00d9ff;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+            border-top: 1px solid #00d9ff;
+            position: relative;
+            z-index: 10;
+        }
+
+        footer p {
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px rgba(0, 217, 255, 0.5);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #00ffff;
+            text-decoration: none;
+            border: 1px solid #00d9ff;
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 217, 255, 0.2);
+            box-shadow: 0 0 15px #00d9ff;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            main {
+                padding: 2rem 1rem;
+            }
+
+            .tutorial-section h2 {
+                font-size: 1.5rem;
+            }
+
+            .code-block {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="starfield" id="starfield"></div>
+
+    <header>
+        <h1>📖 JAMA PAPER WORKFLOW TUTORIAL</h1>
+        <p>[ Setting Up the Automatic Paper Writing Workflow ]</p>
+    </header>
+
+    <nav>
+        <a href="index.html">← BACK HOME</a>
+    </nav>
+
+    <main>
+        <a href="index.html" class="back-link">[ ← BACK TO PROJECT ]</a>
+
+        <div class="table-of-contents">
+            <h2>> TABLE OF CONTENTS</h2>
+            <ul>
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#step-1">Step 1: Clone the Repository</a></li>
+                <li><a href="#step-2">Step 2: Set Up VSCode with Copilot</a></li>
+                <li><a href="#step-3">Step 3: Prepare Your Data</a></li>
+                <li><a href="#step-4">Step 4: Using Copilot to Generate the Workflow</a></li>
+                <li><a href="#step-5">Step 5: View Your Generated Paper</a></li>
+                <li><a href="#advanced">Advanced: Running the Workflow Manually</a></li>
+            </ul>
+        </div>
+
+        <div class="tutorial-section" id="prerequisites">
+            <h2>> PREREQUISITES</h2>
+            <p>Before you begin, make sure you have the following installed:</p>
+            <ul>
+                <li><strong>Git</strong> - For cloning the repository</li>
+                <li><strong>Python 3.8+</strong> - For running the workflow scripts</li>
+                <li><strong>VSCode</strong> - For editing and running the workflow</li>
+                <li><strong>GitHub Copilot</strong> - For AI-assisted paper generation (requires VSCode extension)</li>
+                <li><strong>LaTeX</strong> - For compiling the final PDF (pdflatex or similar)</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>Optional but recommended:</strong></p>
+            <ul>
+                <li><strong>Conda</strong> or <strong>Pip</strong> virtual environment for dependency isolation</li>
+            </ul>
+        </div>
+
+        <div class="tutorial-section" id="step-1">
+            <h2>> STEP 1: CLONE THE REPOSITORY</h2>
+
+            <h3>Via Command Line</h3>
+            <p>Open your terminal/command prompt and run:</p>
+            <div class="code-block">
+<code>git clone https://github.com/hsph-bst236-2026/midterm-project-ele_aaa midterm-project && cd midterm-project && code . -a</code>
+            </div>
+            <div class="feature-box">
+                <strong>What this command does:</strong>
+                <ul style="margin: 0.5rem 0 0 0; margin-left: 1rem;">
+                    <li>Clones the repository into a folder named <code>midterm-project</code></li>
+                    <li>Navigates into the folder (<code>cd midterm-project</code>)</li>
+                    <li>Opens the project in VSCode (<code>code . -a</code>)</li>
+                </ul>
+            </div>
+
+            <h3>Alternative: Manual Steps</h3>
+            <p>If you prefer to do this manually:</p>
+            <ol>
+                <li>Go to <a href="https://github.com/hsph-bst236-2026/midterm-project-ele_aaa" style="color: #00ffff;">https://github.com/hsph-bst236-2026/midterm-project-ele_aaa</a></li>
+                <li>Click the green <strong>"Code"</strong> button and select <strong>"Clone with HTTPS"</strong> or <strong>"Clone with SSH"</strong></li>
+                <li>Copy the URL</li>
+                <li>Open a terminal and run:
+                    <div class="code-block">
+<code>git clone [PASTE_URL] midterm-project
+cd midterm-project
+code . -a</code>
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="tutorial-section" id="step-2">
+            <h2>> STEP 2: SET UP VSCODE WITH COPILOT</h2>
+
+            <h3>Install GitHub Copilot Extension</h3>
+            <ol>
+                <li>Open VSCode and navigate to the <strong>Extensions</strong> panel (Ctrl+Shift+X on Windows)</li>
+                <li>Search for <strong>"GitHub Copilot"</strong></li>
+                <li>Click <strong>Install</strong></li>
+                <li>Sign in with your GitHub account when prompted</li>
+            </ol>
+
+            <h3>Verify Installation</h3>
+            <ul>
+                <li>Look for the Copilot icon in the sidebar (should appear as a chat icon)</li>
+                <li>You should see a message confirming Copilot is ready to use</li>
+            </ul>
+        </div>
+
+        <div class="tutorial-section" id="step-3">
+            <h2>> STEP 3: PREPARE YOUR DATA</h2>
+            <p>The workflow expects data in a specific location. This project includes sample data to test with, but you can also add your own.</p>
+
+            <h3>Using the Sample Exam Data (Recommended for First Run)</h3>
+            <p>The repository includes a sample dataset in <code>Midterm_Exam-main/data/</code>. This folder contains:</p>
+            <ul>
+                <li><code>Data_Description.md</code> - Description of the datasets</li>
+                <li><code>hcw_mandates_table.csv</code> - Healthcare worker mandate data</li>
+                <li><code>United_States_COVID-19_Cases_and_Deaths_by_State_over_Time...csv</code> - COVID-19 cases and deaths</li>
+            </ul>
+            <p>These files are already in place and ready to use.</p>
+
+            <h3>Using Your Own Data</h3>
+            <p>If you want to use a different dataset:</p>
+            <ol>
+                <li><strong>Create or locate your data folder</strong> - This should contain:
+                    <ul style="margin-top: 0.5rem; margin-left: 1rem;">
+                        <li>One or more CSV/XLSX files with your datasets</li>
+                        <li>(Optional) A <code>Data_Description.md</code> file explaining your datasets</li>
+                    </ul>
+                </li>
+                <li><strong>Copy your data into the project</strong> - You can place it in:
+                    <ul style="margin-top: 0.5rem; margin-left: 1rem;">
+                        <li><code>Midterm_Exam-main/data/</code> (to replace sample data)</li>
+                        <li>Or create a new folder like <code>my_data/</code> at the project root</li>
+                    </ul>
+                </li>
+                <li><strong>Document your data</strong> - Create a <code>Data_Description.md</code> file that includes:
+                    <div class="code-block">
+<code"># Data Description
+
+## Dataset Overview
+- **File**: your_dataset.csv
+- **Rows**: [number of rows]
+- **Columns**: [list of columns]
+- **Description**: Brief description of what the data contains
+
+## Variables
+- Variable1: Description
+- Variable2: Description</code>
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="tutorial-section" id="step-4">
+            <h2>> STEP 4: USING COPILOT TO GENERATE THE WORKFLOW</h2>
+
+            <h3>4a. Open Copilot Chat</h3>
+            <ol>
+                <li>In VSCode, click on the <strong>Copilot Chat</strong> icon in the left sidebar (or press Ctrl+Shift+I)</li>
+                <li>A chat panel will open on the right side</li>
+            </ol>
+
+            <h3>4b. Paste the Copilot Prompt</h3>
+            <p>Copy and paste the following prompt into the Copilot chat:</p>
+            <div class="code-block">
+<code>Write a paper using the data in the Midterm_Exam-main folder using the workflow provided by the workflow folder</code>
+            </div>
+
+            <p><strong>Alternative prompts you can use:</strong></p>
+            <ul>
+                <li><code>Generate a JAMA Network Open style paper analyzing the data in Midterm_Exam-main/data/</code></li>
+                <li><code>Create a research paper using the COVID-19 and healthcare mandate datasets in Midterm_Exam-main/data/</code></li>
+            </ul>
+
+            <h3>4c. Let Copilot Run the Workflow</h3>
+            <p>Copilot will:</p>
+            <ol>
+                <li>Analyze the data in the specified folder</li>
+                <li>Perform exploratory data analysis (EDA)</li>
+                <li>Select appropriate statistical models</li>
+                <li>Generate tables and figures</li>
+                <li>Write manuscript sections (Title, Abstract, Methods, Results, Discussion, etc.)</li>
+                <li>Compile everything into a LaTeX document</li>
+                <li>Generate a PDF paper</li>
+            </ol>
+
+            <div class="feature-box">
+                <strong>Processing time:</strong> Expect 2-5 minutes depending on dataset size and complexity.
+            </div>
+
+            <h3>Monitor Progress</h3>
+            <p>Copilot will provide updates as it completes each step. You can watch the workflow progress in the chat.</p>
+        </div>
+
+        <div class="tutorial-section" id="step-5">
+            <h2>> STEP 5: VIEW YOUR GENERATED PAPER</h2>
+
+            <h3>5a. Using Copilot CLI (Recommended)</h3>
+            <p>Once the workflow completes, type this into the Copilot chat:</p>
+            <div class="code-block">
+<code>Open the paper in explorer</code>
+            </div>
+            <p>This will:</p>
+            <ul>
+                <li>Open the file explorer</li>
+                <li>Navigate to the output folder (<code>output/paper.pdf</code>)</li>
+                <li>Display your generated paper</li>
+            </ul>
+
+            <h3>5b. Manual Navigation</h3>
+            <p>If the above doesn't work, manually navigate to the paper:</p>
+            <ol>
+                <li>In VSCode file explorer (left panel), go to: <code>output/</code> folder</li>
+                <li>Look for <code>paper.pdf</code></li>
+                <li>Double-click to open and view your paper</li>
+            </ol>
+
+            <h3>5c. Locate Paper Outputs</h3>
+            <p>The complete paper generation outputs are saved in:</p>
+            <div class="code-block">
+<code>output/
+├── paper.pdf              ← Your final paper
+└── paper_summary.html     ← Web version summary
+
+manuscript/
+├── title.txt
+├── abstract.txt
+├── introduction.txt
+├── methods.txt
+├── results.txt
+├── discussion.txt
+├── limitations.txt
+└── conclusion.txt
+
+results/
+├── figures/
+├── tables/
+└── statistics.json</code>
+            </div>
+        </div>
+
+        <div class="tutorial-section" id="advanced">
+            <h2>> ADVANCED: RUNNING THE WORKFLOW MANUALLY</h2>
+            <p>For advanced users who want to run the workflow step-by-step or customize the process:</p>
+
+            <h3>Understanding the Workflow Structure</h3>
+            <p>The workflow folder includes:</p>
+            <ul>
+                <li><code>data_analysis.py</code> - Performs exploratory data analysis</li>
+                <li><code>model_selection.py</code> - Selects appropriate statistical models</li>
+                <li><code>figure_generation.py</code> - Creates publication-quality figures</li>
+                <li><code>paper_generation.py</code> - Writes manuscript sections</li>
+                <li><code>latex_compiler.py</code> - Compiles LaTeX to PDF</li>
+            </ul>
+
+            <h3>Running Individual Components</h3>
+            <p>To run each component manually:</p>
+            <div class="code-block">
+<code>python workflow/data_analysis.py --input Midterm_Exam-main/data/
+python workflow/model_selection.py --data results/eda/
+python workflow/figure_generation.py --data results/models/
+python workflow/paper_generation.py --figures results/figures/
+python workflow/latex_compiler.py --manuscript manuscript/</code>
+            </div>
+
+            <h3>Custom Configuration</h3>
+            <p>Edit <code>workflow/config.yaml</code> to customize:</p>
+            <ul>
+                <li>Data preprocessing parameters</li>
+                <li>Statistical test thresholds</li>
+                <li>Figure styles and formats</li>
+                <li>Paper formatting and margins</li>
+                <li>LaTeX compilation options</li>
+            </ul>
+
+            <h3>Debugging and Troubleshooting</h3>
+            <p>If you encounter issues:</p>
+            <ol>
+                <li>Check <code>logs/</code> folder for detailed error messages</li>
+                <li>Verify data formats match expected CSV/XLSX structure</li>
+                <li>Ensure all Python dependencies are installed: <code>pip install -r requirements.txt</code></li>
+                <li>Verify LaTeX is installed and accessible from command line</li>
+                <li>Check that data folder paths are correct in your commands</li>
+            </ol>
+        </div>
+
+        <a href="index.html" class="back-link">[ ← BACK TO PROJECT ]</a>
+    </main>
+
+    <footer>
+        <p>▌ JAMA Paper Workflow Tutorial | Built with AI assistance for BST 236 ▌</p>
+    </footer>
+
+    <script>
+        // Generate starfield background
+        const starfield = document.getElementById('starfield');
+        const starCount = 100;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starfield.appendChild(star);
+        }
+
+        // Smooth scroll to sections
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
